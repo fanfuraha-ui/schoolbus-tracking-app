@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>School bus system: what's built</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: a transport office's handover pack: clear, proud, practical.
+   IDEA: a transit route map. The system is one line from the bus to the parent, stops along the way.
+   PICTURE: the route-line diagram up top, then the real screens of each app.
+   COLOUR and TYPE: the product's own: signage navy, bus yellow for the bus only, green/amber/red status; Barlow + Barlow Condensed.
+   LAYOUT: navy header band with the line, then one band per app, then status. Stacks to one column under 600px. */
+:root{color-scheme:light dark;
+  --bg:light-dark(#EEF1F5,#0F1424);--card:light-dark(#FFFFFF,#182036);--ink:light-dark(#1A2238,#E8ECF4);--soft:light-dark(#3A4560,#B8C1D4);
+  --muted:light-dark(#5E6779,#8E98AE);--line:light-dark(#D8DEE8,#2A3450);--navy:#1A2238;--bus:#FFB400;--ok:#1F8A5B;--late:#C26A00;--alert:#C8102E}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16.5px/1.55 Barlow,system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3{font-family:"Barlow Condensed",Barlow,sans-serif;font-weight:700;line-height:1.05;margin:0;text-wrap:balance}
+h1{font-size:clamp(36px,5.4vw,56px)}h2{font-size:clamp(30px,3.6vw,42px)}h3{font-size:22px;font-weight:600}
+p{margin:0}a{color:inherit}
+.wrap{max-width:1240px;margin:0 auto}
+.band{padding:clamp(32px,5vw,72px) max(5vw,16px)}
+.hero{background:var(--navy);color:#fff}
+.hero .lead{color:#C9D1E3;font-size:clamp(17px,1.6vw,20px);max-width:44rem;margin-top:14px}
+.btns{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}
+.btn{display:inline-flex;flex-wrap:wrap;align-items:baseline;column-gap:10px;min-height:48px;padding:12px 20px;border-radius:12px;font-weight:600;text-decoration:none}
+.btn small{white-space:nowrap}
+.btn.primary{background:var(--bus);color:var(--navy)}.btn.ghost{border:2px solid #47527A;color:#fff}
+.btn:focus-visible,.shot:focus-visible{outline:3px solid var(--bus);outline-offset:3px}
+.btn small{font-weight:500;opacity:.8}
+.stats{display:flex;flex-wrap:wrap;gap:10px 36px;margin-top:34px;color:#C9D1E3}
+.stats b{display:block;font:700 34px/1 "Barlow Condensed",sans-serif;color:#fff}
+.fig{position:relative;height:210px;margin-top:36px}
+.fig>svg{position:absolute;inset:0;width:100%;height:100%}
+.sec-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:16px 48px;align-items:end;margin-bottom:28px}
+.sec-head p{color:var(--soft)}
+.tag{display:inline-block;font:600 14px Barlow;padding:3px 10px;border-radius:99px;background:var(--card);border:1px solid var(--line);margin-bottom:12px}
+.shot{display:block;padding:0;border:0;background:none;cursor:zoom-in;text-align:left;color:inherit;font:inherit;width:100%}
+.shot img{display:block;width:100%;height:auto}
+.desk img{border-radius:12px;border:1px solid var(--line);box-shadow:0 1px 2px rgba(20,30,60,.06),0 12px 32px -12px rgba(20,30,60,.25)}
+.cap{margin-top:10px;color:var(--soft);font-size:15px}.cap b{color:var(--ink);font-weight:600}
+.feature{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(0,1fr);gap:28px;align-items:start}
+.points{display:flex;flex-direction:column;gap:16px}
+.points li{list-style:none}.points ul{margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
+.points b{display:block}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px;margin-top:36px}
+.phones{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:28px 22px}
+.phone img{border-radius:30px;box-shadow:0 16px 36px -16px rgba(20,30,60,.45)}
+.phone.framed img{border:9px solid #23262F;border-radius:36px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;vertical-align:1px}
+.cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px}
+.card h3{margin-bottom:12px}
+.card ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:8px;color:var(--soft)}
+.card ul b{color:var(--ink);font-weight:600}
+.status{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.status .card{border-top:6px solid var(--ok)}.status .card.warn{border-top-color:var(--late)}.status .card.next{border-top-color:var(--bus)}
+.note{margin-top:28px;color:var(--muted);font-size:14px}
+dialog{border:0;padding:0;background:transparent;max-width:min(96vw,1500px);max-height:94vh}
+dialog::backdrop{background:rgba(10,14,28,.82)}
+dialog img{display:block;max-width:min(96vw,1500px);max-height:88vh;width:auto;height:auto;border-radius:12px}
+dialog p{color:#fff;margin-top:10px;text-align:center}
+dialog button{position:fixed;top:14px;right:16px;min-width:44px;min-height:44px;border-radius:22px;border:0;background:#fff;color:var(--navy);font:600 16px Barlow;cursor:pointer}
+@media(max-width:900px){.feature,.sec-head{grid-template-columns:minmax(0,1fr)}.grid3,.cols,.status{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){.fig{height:520px}.phones{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(prefers-reduced-motion:no-preference){.busdot{animation:ride 9s ease-in-out infinite alternate}}
+@keyframes ride{from{transform:translateX(0)}to{transform:translateX(var(--ride,0px))}}
+</style>
+</head>
+<body>
+
+<header class="band hero">
+  <div class="wrap">
+    <h1>School bus tracking and parent alerts: built, tested, ready to deploy</h1>
+    <p class="lead">Every bus reports where it is. The school's server works out who to tell and when. Parents get a countdown on their phone, or an SMS if they have no smartphone, and the office sees the whole fleet on one screen.</p>
+    <div class="btns">
+      <a class="btn primary" href="admin-demo/">Open the office dashboard demo <small>password: demo</small></a>
+      <a class="btn ghost" href="parent-demo/">Open the parent app demo <small>code: 123456</small></a>
+    </div>
+    <div class="stats">
+      <div><b>3</b>apps</div><div><b>6</b>buses, 33 seats each</div><div><b>180</b>students</div><div><b>English + Kiswahili</b>throughout</div><div><b>163</b>automated tests passing</div>
+    </div>
+    <div class="fig" aria-label="How the system fits together: driver phone, school server, then parents and the transport office"><svg id="routefig" role="img"></svg></div>
+  </div>
+</header>
+
+<main>
+<section class="band" id="office">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><span class="tag">Web · React</span><h2>Transport office dashboard</h2></div>
+      <p>For the office during the school run: one line per bus shows where it is between its stops. Problems surface on their own, in plain language, and the office fixes them without calling a developer.</p>
+    </div>
+    <div class="feature">
+      <figure style="margin:0"><button class="shot desk" data-cap="Live: every bus as a route line, with problems listed on the right"><img src="img/admin-live.jpg" alt="Live page: five of six buses on the road, route lines with bus positions, needs-attention list" width="1400" height="875"></button>
+        <figcaption class="cap"><b>Live.</b> The headline says how the run is going. Each bus is a line of its stops: green on time, amber late, red no GPS.</figcaption></figure>
+      <div class="points"><ul>
+        <li><b>Needs attention</b><span class="cap">Bus late or silent, breakdowns the driver reported, SMS credit running low, a missed backup. Each one says what to do.</span></li>
+        <li><b>Cancel or swap a bus</b><span class="cap">Cancel a trip with a reason that goes to every parent on it, or change the bus or driver before it starts.</span></li>
+        <li><b>Set up once a term</b><span class="cap">Import students from a spreadsheet (with row-by-row errors), link parents, place stops by pasting Google Maps coordinates.</span></li>
+      </ul></div>
+    </div>
+    <div class="grid3">
+      <figure style="margin:0"><button class="shot desk" data-cap="A trip: every stop with times and who boards"><img src="img/admin-trip.jpg" alt="Trip drawer for Route 3 Kinoo showing stops, times and riders" loading="lazy"></button><figcaption class="cap"><b>Trip detail.</b> Each stop: due, arrived, who boards, who is absent.</figcaption></figure>
+      <figure style="margin:0"><button class="shot desk" data-cap="Routes and stops: the order, the times, the alert circle"><img src="img/admin-routes.jpg" alt="Routes and stops editor" loading="lazy"></button><figcaption class="cap"><b>Routes and stops.</b> Usual bus and driver, stop order, alert timing per stop.</figcaption></figure>
+      <figure style="margin:0"><button class="shot desk" data-cap="Reports: on-time % by route and day, issues, SMS cost"><img src="img/admin-reports.jpg" alt="Reports page with on-time percentage per route and a day-by-day chart" loading="lazy"></button><figcaption class="cap"><b>Reports.</b> On-time % by route and day, for the transport committee.</figcaption></figure>
+      <figure style="margin:0"><button class="shot desk" data-cap="Parent alerts: every SMS and push, with failures and Send again"><img src="img/admin-alerts.jpg" alt="Parent alerts log with delivery status" loading="lazy"></button><figcaption class="cap"><b>Parent alerts.</b> Every message, how it went, and its cost. Failed ones can be resent.</figcaption></figure>
+      <figure style="margin:0"><button class="shot desk" data-cap="Students: search, import, assign stops"><img src="img/admin-students.jpg" alt="Students list" loading="lazy"></button><figcaption class="cap"><b>Students.</b> Search, import, and which stop morning and afternoon.</figcaption></figure>
+      <div class="card" style="align-self:start"><h3>Also in the dashboard</h3><ul><li>Parents and drivers (new PIN, reset a lost phone)</li><li>Buses and seat counts</li><li>School calendar: no-bus days, optionally texting parents</li><li>Settings in plain words</li><li>Activity log: who changed what, when</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="parent" style="background:var(--card)">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><span class="tag">Android first · React Native</span><h2>Parent app</h2></div>
+      <p>What a parent wants at 6:50 am: how many minutes until the bus reaches their stop. Alerts arrive about five minutes before. Parents without the app get the same alerts by SMS, automatically.</p>
+    </div>
+    <div class="phones">
+      <figure style="margin:0" class="phone"><button class="shot" data-cap="Today: countdown, stops before yours, when to be at the stop"><img src="img/parent-today.jpg" alt="Parent app Today screen with a 14 minute countdown" loading="lazy"></button><figcaption class="cap"><b>Today.</b> Countdown, stops to go, "be at the stop by".</figcaption></figure>
+      <figure style="margin:0" class="phone"><button class="shot" data-cap="Live trip with the alert as the bus gets close"><img src="img/parent-trip-alert.jpg" alt="Live trip map with a push notification: bus is 5 minutes away" loading="lazy"></button><figcaption class="cap"><b>Track the bus.</b> Live map and stop list; the alert pops up at 5 minutes.</figcaption></figure>
+      <figure style="margin:0" class="phone"><button class="shot" data-cap="Under a minute away: words instead of 0 min"><img src="img/parent-trip-arrived.jpg" alt="Trip screen: the bus is almost there" loading="lazy"></button><figcaption class="cap"><b>Almost there.</b> Then arrived, boarded and dropped off, from the driver's taps.</figcaption></figure>
+      <figure style="margin:0" class="phone"><button class="shot" data-cap="Report that a child won't ride"><img src="img/parent-notriding.jpg" alt="Not riding sheet: choose child, day and trip" loading="lazy"></button><figcaption class="cap"><b>Not riding.</b> Tell the driver not to wait, today or a later day.</figcaption></figure>
+      <figure style="margin:0" class="phone"><button class="shot" data-cap="Alert history, with how each one arrived"><img src="img/parent-alerts.jpg" alt="Alerts history grouped by day" loading="lazy"></button><figcaption class="cap"><b>Alerts.</b> Every message, by app or SMS; failures shown honestly.</figcaption></figure>
+      <figure style="margin:0" class="phone"><button class="shot" data-cap="Everything in Kiswahili, including the SMS"><img src="img/parent-kiswahili.jpg" alt="Today screen in Kiswahili" loading="lazy"></button><figcaption class="cap"><b>Kiswahili.</b> One tap. The SMS language follows.</figcaption></figure>
+      <figure style="margin:0" class="phone"><button class="shot" data-cap="Sign in with the phone number the school has, and an SMS code"><img src="img/parent-signin.jpg" alt="Sign-in screen asking for a phone number" loading="lazy"></button><figcaption class="cap"><b>Sign in.</b> No passwords: the number the school has, plus an SMS code.</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="driver">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><span class="tag">Android · school-owned phone in each bus</span><h2>Driver app</h2></div>
+      <p>Big buttons, almost no typing, built for a moving bus. It keeps sending GPS with the screen off and keeps working with no signal: positions and taps are saved on the phone and sent when signal returns.</p>
+    </div>
+    <div class="phones">
+      <figure style="margin:0" class="phone framed"><button class="shot" data-cap="The driver's day: start or resume each trip"><img src="img/driver-today.jpg" alt="Driver Today list with Resume trip and Start trip buttons" loading="lazy"></button><figcaption class="cap"><b>Today.</b> One button to start each trip.</figcaption></figure>
+      <figure style="margin:0" class="phone framed"><button class="shot" data-cap="On the trip: next stop, ETA, who to pick up"><img src="img/driver-trip.jpg" alt="Trip screen: next stop Gikambura Stage 9, ETA 4 min, children to pick up" loading="lazy"></button><figcaption class="cap"><b>On the trip.</b> Next stop, ETA, tap each child on; absent ones already crossed out.</figcaption></figure>
+      <figure style="margin:0" class="phone framed"><button class="shot" data-cap="No signal: everything queued and shown, sent later (Kiswahili)"><img src="img/driver-offline.jpg" alt="Offline banner in Kiswahili with 140 positions waiting to send" loading="lazy"></button><figcaption class="cap"><b>No signal.</b> Keeps working; 140 positions wait to send. In Kiswahili here.</figcaption></figure>
+      <figure style="margin:0" class="phone framed"><button class="shot" data-cap="Report a problem in two taps"><img src="img/driver-incident.jpg" alt="Report a problem sheet: traffic, breakdown, accident" loading="lazy"></button><figcaption class="cap"><b>Report a problem.</b> Two taps; parents are told if it's serious.</figcaption></figure>
+      <figure style="margin:0" class="phone framed"><button class="shot" data-cap="Phone setup checklist so tracking survives the screen turning off"><img src="img/driver-setup.jpg" alt="Phone setup checklist with Fix buttons" loading="lazy"></button><figcaption class="cap"><b>Phone setup.</b> Fixes the settings that make cheap Android phones kill GPS.</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section class="band" style="background:var(--card)">
+  <div class="wrap">
+    <div class="sec-head"><h2>Behind the screens</h2><p>The parts nobody sees, and the reason parents can trust the alerts.</p></div>
+    <div class="cols">
+      <div class="card"><h3>Alert engine</h3><ul>
+        <li><b>Arrival needs proof:</b> two GPS fixes inside the stop's circle, or the bus slowing to a stop, so a bus driving past doesn't count</li>
+        <li><b>ETAs learn</b> each road's real travel times</li>
+        <li><b>Late buses</b> warn parents at 10, 20 and 30 minutes, once each</li>
+        <li><b>Siblings</b> get one message, not three. Quiet hours are respected; urgent alerts always go</li>
+        <li><b>Push first, SMS if push fails</b>, never both</li>
+      </ul></div>
+      <div class="card"><h3>Built to keep running</h3><ul>
+        <li><b>Nothing lost if the server restarts:</b> alerts are queued in the database</li>
+        <li><b>Problems are spotted automatically:</b> a silent bus, a stalled bus, a bus that never left</li>
+        <li><b>Office warnings:</b> SMS credit low, with school days left</li>
+        <li><b>Nightly backups:</b> checked as readable, copied off-site encrypted, one-command test restore</li>
+      </ul></div>
+      <div class="card"><h3>Ready to deploy</h3><ul>
+        <li><b>One server, one web address,</b> automatic HTTPS</li>
+        <li><b>Setup:</b> one script prepares a new Ubuntu server, one deploys</li>
+        <li><b>Automatic deploys:</b> GitHub tests every change and deploys it, but never while buses are out</li>
+        <li><b>Runbook:</b> registrations, SMS sender ID, Play Store, monitoring, "what to do when"</li>
+      </ul></div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="status">
+  <div class="wrap">
+    <div class="sec-head"><h2>Where it stands</h2><p>Built in eight phases, each tested before the next. Here is what has been proven and what only a real server and real phones can prove.</p></div>
+    <div class="status">
+      <div class="card"><h3><span class="dot" style="background:var(--ok)"></span>Proven</h3><ul>
+        <li>163 automated tests, including the apps run against the real server code and a real database</li>
+        <li>Every screen clicked through in a browser at phone and desktop size</li>
+        <li>Backups and restores run against a real database; a damaged backup is caught</li>
+      </ul></div>
+      <div class="card warn"><h3><span class="dot" style="background:var(--late)"></span>Needs a real run</h3><ul>
+        <li>Building the server images (first GitHub run)</li>
+        <li>Installing the apps on real Android phones</li>
+        <li>Live SMS and push with the school's own accounts</li>
+      </ul></div>
+      <div class="card next"><h3><span class="dot" style="background:var(--bus)"></span>To go live</h3><ul>
+        <li>Register with the Data Protection Commissioner</li>
+        <li>Apply for the SMS sender ID and a Google Play account (both take time)</li>
+        <li>Set up the server, pilot Route 1 for a week, then all six buses</li>
+      </ul></div>
+    </div>
+    <p class="note">All names, routes and numbers shown are sample data for a demonstration school.</p>
+  </div>
+</section>
+</main>
+
+<dialog id="zoom" aria-label="Screenshot"><button type="button" id="zclose">Close</button><img id="zimg" alt=""><p id="zcap"></p></dialog>
+
+<script>
+{
+  // Route-line diagram of the system, drawn at the box's real size.
+  const s = document.getElementById('routefig');
+  const nodes = [
+    { t: 'Driver phone', d: ['GPS every 5 s, works offline'] },
+    { t: 'School server', d: ['Works out arrivals, ETAs,', 'delays; decides who to tell'] },
+    { t: 'Parents', d: ['App push, or SMS', 'via Africa’s Talking'] },
+    { t: 'Transport office', d: ['Live dashboard,', 'warnings, reports'] },
+  ];
+  const draw = () => {
+    const W = s.clientWidth, H = s.clientHeight, narrow = W < 560;
+    let out = '';
+    if (!narrow) {
+      const y = 92, x0 = 40, x1 = W - 40, step = (x1 - x0) / (nodes.length - 1);
+      out += `<line x1="${x0}" y1="${y}" x2="${x1}" y2="${y}" stroke="#3B4870" stroke-width="10" stroke-linecap="round"/>`;
+      out += `<line x1="${x0}" y1="${y}" x2="${x0 + step}" y2="${y}" stroke="#1F8A5B" stroke-width="10" stroke-linecap="round"/>`;
+      nodes.forEach((n, i) => {
+        const x = x0 + i * step, anchor = i === 0 ? 'start' : i === nodes.length - 1 ? 'end' : 'middle', tx = i === 0 ? x - 14 : i === nodes.length - 1 ? x + 14 : x;
+        out += `<circle cx="${x}" cy="${y}" r="16" fill="#fff" stroke="#1A2238" stroke-width="6"/>`;
+        out += `<text x="${tx}" y="${y + 52}" text-anchor="${anchor}" fill="#fff" font-family="Barlow Condensed,sans-serif" font-weight="700" font-size="${W < 900 ? 20 : 24}">${n.t}</text>`;
+        n.d.forEach((line, j) => { out += `<text x="${tx}" y="${y + 78 + j * 21}" text-anchor="${anchor}" fill="#C9D1E3" font-family="Barlow,sans-serif" font-size="${W < 900 ? 14 : 16}">${line}</text>`; });
+      });
+      s.style.setProperty('--ride', (step - 40) + 'px');
+      out += `<g class="busdot"><circle cx="${x0 + 20}" cy="${y}" r="18" fill="#FFB400" stroke="#1A2238" stroke-width="4"/><circle cx="${x0 + 20}" cy="${y}" r="28" fill="none" stroke="#FFB400" stroke-opacity=".35" stroke-width="6"/></g>`;
+      out += `<text x="${x0}" y="${y - 40}" fill="#FFB400" font-family="Barlow,sans-serif" font-weight="600" font-size="15">Bus KDA 102B, Route 2</text>`;
+    } else {
+      const x = 34, y0 = 34, y1 = H - 60, step = (y1 - y0) / (nodes.length - 1);
+      out += `<line x1="${x}" y1="${y0}" x2="${x}" y2="${y1}" stroke="#3B4870" stroke-width="10" stroke-linecap="round"/>`;
+      nodes.forEach((n, i) => {
+        const y = y0 + i * step;
+        out += `<circle cx="${x}" cy="${y}" r="14" fill="${i === 0 ? '#FFB400' : '#fff'}" stroke="#1A2238" stroke-width="5"/>`;
+        out += `<text x="${x + 32}" y="${y + 7}" fill="#fff" font-family="Barlow Condensed,sans-serif" font-weight="700" font-size="22">${n.t}</text>`;
+        n.d.forEach((line, j) => { out += `<text x="${x + 32}" y="${y + 30 + j * 20}" fill="#C9D1E3" font-family="Barlow,sans-serif" font-size="15">${line}</text>`; });
+      });
+    }
+    s.innerHTML = out;
+  };
+  new ResizeObserver(draw).observe(s);
+
+  // Click any screenshot to see it full size.
+  const dlg = document.getElementById('zoom'), zi = document.getElementById('zimg'), zc = document.getElementById('zcap');
+  document.querySelectorAll('.shot').forEach((b) => b.addEventListener('click', () => {
+    const img = b.querySelector('img'); zi.src = img.src; zi.alt = img.alt; zc.textContent = b.dataset.cap || '';
+    try { dlg.showModal(); } catch (e) { window.open(img.src); }
+  }));
+  document.getElementById('zclose').addEventListener('click', () => dlg.close());
+  dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+}
+</script>
+</body>
+</html>
